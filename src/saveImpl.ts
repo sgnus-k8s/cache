@@ -8,6 +8,7 @@ import {
     StateProvider
 } from "./stateProvider";
 import * as utils from "./utils/actionUtils";
+import * as custom from "./custom/cache";
 
 // Catch and log any unhandled exceptions.  These exceptions can leak out of the uploadChunk method in
 // @actions/toolkit when a failed upload closes the file descriptor causing any in-process reads to
@@ -17,8 +18,13 @@ process.on("uncaughtException", e => utils.logWarning(e.message));
 export async function saveImpl(
     stateProvider: IStateProvider
 ): Promise<number | void> {
+    const baseTag = 'v4.2.3';
+    core.info(`sgnus-k8s/cache@custom: based on actions/cache@${baseTag}`);
     let cacheId = -1;
     try {
+        if (core.getBooleanInput('custom') && !custom.isFeatureAvailable()) {
+            return;
+        }
         if (!utils.isCacheFeatureAvailable()) {
             return;
         }
@@ -62,12 +68,21 @@ export async function saveImpl(
             Inputs.EnableCrossOsArchive
         );
 
-        cacheId = await cache.saveCache(
-            cachePaths,
-            primaryKey,
-            { uploadChunkSize: utils.getInputAsInt(Inputs.UploadChunkSize) },
-            enableCrossOsArchive
-        );
+        if (core.getBooleanInput('custom')) {
+            cacheId = await custom.saveCache(
+                cachePaths,
+                primaryKey,
+                { uploadChunkSize: utils.getInputAsInt(Inputs.UploadChunkSize) },
+                enableCrossOsArchive
+            );
+        } else {
+            cacheId = await cache.saveCache(
+                cachePaths,
+                primaryKey,
+                { uploadChunkSize: utils.getInputAsInt(Inputs.UploadChunkSize) },
+                enableCrossOsArchive
+            );
+        }
 
         if (cacheId != -1) {
             core.info(`Cache saved with key: ${primaryKey}`);
