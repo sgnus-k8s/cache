@@ -14,7 +14,7 @@ export async function restoreImpl(
     stateProvider: IStateProvider,
     earlyExit?: boolean | undefined
 ): Promise<string | undefined> {
-    const baseTag = 'v4.2.3';
+    const baseTag = 'v6.1.0';
     core.info(`sgnus-k8s/cache@custom: based on actions/cache@${baseTag}`);
     try {
         if (core.getBooleanInput('custom') && !custom.isFeatureAvailable()) {
